@@ -1,0 +1,6 @@
+.DS_Store
+__pycache__/
+node_modules/
+yarn.lock
+package-lock.json
+.env
