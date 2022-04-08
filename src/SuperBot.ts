@@ -55,10 +55,9 @@ export default class SuperBot {
         })
     }
 
-    getUserInfoById = async (userid: string): Promise<string> => {
+    getUsernameById = async (userid: string): Promise<string> => {
         const force = true;
         const user = await this.client.users.fetch(userid, { force });
-        // const role = await this.client.users.
         return user?.username;
     }
 
