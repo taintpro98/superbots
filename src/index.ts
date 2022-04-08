@@ -6,6 +6,5 @@ import SuperBot from './SuperBot';
 dotenv.config();
 
 const superbot = new SuperBot();
-// superbot.onMessage();
-// superbot.login();
-superbot.dumpAllBalancesInExcelFile();
+superbot.onMessage();
+superbot.login();

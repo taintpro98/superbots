@@ -3,7 +3,6 @@ import path from 'path';
 import dotenv from 'dotenv';
 import reader from 'xlsx';
 import SuperBot from './SuperBot';
-import { UserFlags } from 'discord.js';
 
 dotenv.config();
 
@@ -36,10 +35,6 @@ const check = (balances: any[], users: any[]) => {
     console.log("off users", offUsers);
 
 }
-
-// const getUserInfoById = (client: any) => {
-//     client.users.cache.find(user => user.id === 'USER-ID')
-// }
 
 const getAllInfoUsers = async (): Promise<any[]> => {
     try {
@@ -113,10 +108,6 @@ const dumpAllBalancesInExcelFile = async (superbot: any): Promise<void> => {
         totalPages = data?.totalPages;
         console.log(currentPage);
     }
-    // balances = balances.filter(bal => {
-    //     const checker = users.filter(u => u.id === bal.UserId)[0];
-    //     return !!(checker);
-    // })
     console.log(balances);
     const ws = reader.utils.json_to_sheet(balances);
 
@@ -125,7 +116,6 @@ const dumpAllBalancesInExcelFile = async (superbot: any): Promise<void> => {
     console.log("done");
 }
 
-// getBalancesByPage(MAINUnbelievaBoatAPI, 20, 5039);
 (async () => {
     const superbot = new SuperBot();
     await superbot.login();

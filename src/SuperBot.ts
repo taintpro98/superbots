@@ -1,14 +1,12 @@
 import DiscordJS, { Intents } from 'discord.js';
-import path from 'path';
-import axios from 'axios';
-import XLSX from 'xlsx';
 
+import UnbelievaBoatAPIBot from './bots/UnbelievaBoatAPIBot';
 export default class SuperBot {
     private client;
     private guildId: string = '';
     private guild: DiscordJS.Guild | undefined;
-    private LeaderBoardUnbelievaBoatAPI: string = '';
-    private OUTPUT_DIR: string = path.resolve(__dirname, '../excels');
+
+    private unbelievaBoatAPIBot: UnbelievaBoatAPIBot = new UnbelievaBoatAPIBot();
 
     constructor() {
         this.client = new DiscordJS.Client({
@@ -38,17 +36,27 @@ export default class SuperBot {
                     content: message.guild?.id
                 })
             } else if (message.content === 'run') {
+                message.reply({
+                    content: 'Our Superbot is processing your requirement. Please wait a litle longer. About 8-10 hours for filtering users by their roles'
+                })
+
                 this.guildId = message.guild?.id ?? '';
-                this.LeaderBoardUnbelievaBoatAPI = `https://unbelievaboat.com/api/v1/guilds/${this.guildId}/leaderboard`;
+                this.unbelievaBoatAPIBot.setLeaderBoardUnbelievaBoatAPI(`https://unbelievaboat.com/api/v1/guilds/${this.guildId}/leaderboard`);
                 this.guild = this.client.guilds.cache.get(this.guildId);
 
-                const excelPath: string = await this.dumpAllBalancesInExcelFile();
+                const excelPath: string = await this.unbelievaBoatAPIBot.dumpAllBalancesInExcelFile(this.guild);
+                // message.channel.send({
+                //     files: [
+                //         excelPath
+                //     ]
+                // })
                 message.reply({
-                    content: 'done'
+                    content: 'We have completed the excel file you need. Contact the bot owner to get the file'
                 })
+            } else if (message.content === 'test') {
                 message.channel.send({
                     files: [
-                        excelPath
+                        'excels/test.xlsx'
                     ]
                 })
             }
@@ -59,96 +67,5 @@ export default class SuperBot {
         const force = true;
         const user = await this.client.users.fetch(userid, { force });
         return user?.username;
-    }
-
-    getBalancesByPage = async (api: string, limit: number, page: number) => {
-        try {
-            const response = await axios.get(api, {
-                params: {
-                    limit: limit,
-                    page: page
-                },
-                headers: { "Authorization": `${process.env.AUTHORIZED_TOKEN}` }
-            });
-            const balances = response.data.balances;
-            const users = response.data.users;
-            const pageNumber = response.data.page;
-            const totalPages = response.data.total_pages;
-            return {
-                balances: balances,
-                users: users,
-                pageNumber: pageNumber,
-                totalPages: totalPages
-            }
-        } catch (err: any) {
-            console.error(`${err}`);
-        }
-    }
-
-    dumpExcel = (savepath: string, data: any[]): void => {
-        const workbook = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(data);
-        XLSX.utils.book_append_sheet(workbook, ws, "main");
-        XLSX.writeFile(workbook, savepath);
-    }
-
-    dumpAllBalancesInExcelFile = async (): Promise<string> => {
-        const filterPromise = async (user: any): Promise<boolean | undefined> => {
-            try {
-                let member = await this.guild?.members.fetch(user.id);
-                return member?.roles.cache.has("929711349699838023") || member?.roles.cache.has("950067727157047377");
-            } catch (err: any) {
-                console.error(`${err}`);
-            }
-        }
-        console.log("start");
-
-        let balances: { [key: string]: number } = {};
-        let users: any[] = [];
-        let currentPage = 0;
-        let totalPages = 100;
-
-        while (currentPage !== totalPages) {
-            let data = await this.getBalancesByPage(this.LeaderBoardUnbelievaBoatAPI, 25, currentPage + 1);
-            for (let balance of data?.balances) {
-                balances[balance.user_id] = balance.total;
-            }
-
-            const userPromises: any[] = [];
-            for (let u of data?.users) {
-                userPromises.push(filterPromise(u));
-            }
-            const results = await Promise.all(userPromises);
-            const filtered_members = data?.users.filter((user: any, idx: number) => {
-                return results[idx]
-            });
-
-            users = users.concat(filtered_members.map((user: any) => {
-                return {
-                    UserId: user.id,
-                    Username: user.username,
-                    Tag: user.discriminator
-                }
-            }))
-            currentPage = data?.pageNumber;
-            totalPages = data?.totalPages;
-            console.log(currentPage);
-        }
-        users = users.map((user) => {
-            return {
-                ...user,
-                Balance: balances[user.UserId]
-            }
-        })
-        const filename = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const savepath = path.resolve(this.OUTPUT_DIR, filename);
-        try {
-            this.dumpExcel(savepath, users);
-            console.log("done");
-            return savepath;
-        } catch (err: any) {
-            console.error(`${err}`);
-            return '';
-        }
     }
 }
