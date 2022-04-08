@@ -88,7 +88,7 @@ export default class UnbelievaBoatAPIBot {
                     userPromises.push(filterPromise(u));
                 }
                 const results = await Promise.all(userPromises);
-                const filtered_members = data?.users.filter((user: any, idx: number) => {
+                const filtered_members = data.users.filter((user: any, idx: number) => {
                     return results[idx]
                 });
 
@@ -101,8 +101,8 @@ export default class UnbelievaBoatAPIBot {
                 })
 
                 users = users.concat(newUsers);
-                currentPage = data?.pageNumber;
-                totalPages = data?.totalPages;
+                currentPage = data.pageNumber;
+                totalPages = data.totalPages;
 
                 try {
                     if (currentPage === 1) this.dumpExcel(savepath, users);
