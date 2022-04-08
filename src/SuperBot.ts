@@ -44,14 +44,18 @@ export default class SuperBot {
                 this.unbelievaBoatAPIBot.setLeaderBoardUnbelievaBoatAPI(`https://unbelievaboat.com/api/v1/guilds/${this.guildId}/leaderboard`);
                 this.guild = this.client.guilds.cache.get(this.guildId);
 
-                const excelPath: string = await this.unbelievaBoatAPIBot.dumpAllBalancesInExcelFile(this.guild);
+                const result: any = await this.unbelievaBoatAPIBot.dumpAllBalancesInExcelFile(this.guild);
+                const excelPath: string = result.excelPath;
+                const errorPages: number[] = result.errorPages;
+                const currentUsersCount: number = result.currentUsersCount;
                 // message.channel.send({
                 //     files: [
                 //         excelPath
                 //     ]
                 // })
+                console.log(`There are some error pages when getting data including: ${errorPages.join(",")}`);
                 message.reply({
-                    content: 'We have completed the excel file you need. Contact the bot owner to get the file'
+                    content: `We have completed the excel file you need with ${currentUsersCount}. Contact the bot owner to get the file.`
                 })
             } else if (message.content === 'test') {
                 message.channel.send({

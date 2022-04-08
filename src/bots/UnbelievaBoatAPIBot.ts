@@ -57,17 +57,46 @@ export default class UnbelievaBoatAPIBot {
         XLSX.writeFile(workbook, savepath);
     }
 
-    dumpAllBalancesInExcelFile = async (guild: DiscordJS.Guild | undefined): Promise<string> => {
-        const filterPromise = async (user: any): Promise<boolean | undefined> => {
-            try {
-                let member = await guild?.members.fetch(user.id);
-                return member?.roles.cache.has("929711349699838023") || member?.roles.cache.has("950067727157047377");
-            } catch (err: any) {
-                console.error(`${err}`);
-            }
+    filterPromise = async (guild: DiscordJS.Guild | undefined, user: any): Promise<boolean | undefined> => {
+        try {
+            let member = await guild?.members.fetch(user.id);
+            return member?.roles.cache.has("929711349699838023") || member?.roles.cache.has("950067727157047377");
+        } catch (err: any) {
+            console.error(`${err}`);
         }
+    }
+
+    handleDataSinglePage = async (guild: DiscordJS.Guild | undefined, data: any): Promise<any> => {
+        let balances: { [key: string]: number } = {};
+        for (let balance of data.balances) {
+            balances[balance.user_id] = balance.total;
+        }
+        const userPromises: any[] = [];
+        for (let u of data.users) {
+            userPromises.push(this.filterPromise(guild, u));
+        }
+        const results = await Promise.all(userPromises);
+        const filtered_members = data.users.filter((user: any, idx: number) => {
+            return results[idx]
+        });
+
+        let newUsers: any[] = filtered_members.map((user: any) => {
+            return {
+                UserId: user.id,
+                Username: user.username,
+                Tag: user.discriminator
+            }
+        })
+        return {
+            newUsers: newUsers,
+            balances: balances
+        }
+    }
+
+    dumpAllBalancesInExcelFile = async (guild: DiscordJS.Guild | undefined): Promise<any> => {
         console.log("start");
 
+        let errorPages: number[] = [];
         let balances: { [key: string]: number } = {};
         let users: any[] = [];
         let currentPage = 0;
@@ -80,27 +109,15 @@ export default class UnbelievaBoatAPIBot {
             let currentUsersCount = users.length;
             let data = await this.getBalancesByPage(this.LeaderBoardUnbelievaBoatAPI, 25, currentPage + 1);
             if (data) {
-                for (let balance of data.balances) {
-                    balances[balance.user_id] = balance.total;
-                }
-                const userPromises: any[] = [];
-                for (let u of data.users) {
-                    userPromises.push(filterPromise(u));
-                }
-                const results = await Promise.all(userPromises);
-                const filtered_members = data.users.filter((user: any, idx: number) => {
-                    return results[idx]
-                });
-
-                let newUsers: any[] = filtered_members.map((user: any) => {
-                    return {
-                        UserId: user.id,
-                        Username: user.username,
-                        Tag: user.discriminator
-                    }
-                })
+                const handledData = await this.handleDataSinglePage(guild, data);
+                let newUsers = handledData.newUsers;
+                let newBalances = handledData.balances;
 
                 users = users.concat(newUsers);
+                balances = {
+                    ...balances,
+                    ...newBalances
+                }
                 currentPage = data.pageNumber;
                 totalPages = data.totalPages;
 
@@ -113,7 +130,24 @@ export default class UnbelievaBoatAPIBot {
                 }
                 console.log(currentPage);
             } else {
+                errorPages.push(currentPage);
                 console.log(`Page ${currentPage} has errors when getting data`);
+            }
+        }
+        while (errorPages.length > 0) {
+            let page: any = errorPages.shift();
+            let data = await this.getBalancesByPage(this.LeaderBoardUnbelievaBoatAPI, 25, page);
+            if (data) {
+                const newData = await this.handleDataSinglePage(guild, data);
+                users = users.concat(newData.newUsers);
+                balances = {
+                    ...balances,
+                    ...newData.balances
+                }
+                this.appendExcel(savepath, newData.newUsers, ["UserId", "Username", "Tag"], 0, users.length + 1);
+            } else {
+                errorPages.push(page);
+                console.log(`Page ${page} has errors when getting data`);
             }
         }
         users = users.map((user) => {
@@ -123,7 +157,12 @@ export default class UnbelievaBoatAPIBot {
             }
         })
         this.appendExcel(savepath, users, ["Balance"], 3, 1);
+
         console.log("done");
-        return savepath;
+        return {
+            savepath: savepath,
+            errorPages: errorPages,
+            currentUsersCount: users.length
+        };
     }
 }
