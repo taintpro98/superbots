@@ -145,6 +145,7 @@ export default class UnbelievaBoatAPIBot {
                     ...newData.balances
                 }
                 this.appendExcel(savepath, newData.newUsers, ["UserId", "Username", "Tag"], 0, users.length + 1);
+                console.log(currentPage);
             } else {
                 errorPages.push(page);
                 console.log(`Page ${page} has errors when getting data`);
