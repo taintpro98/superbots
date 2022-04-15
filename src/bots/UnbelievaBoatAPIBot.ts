@@ -66,7 +66,7 @@ export default class UnbelievaBoatAPIBot {
         }
     }
 
-    handleDataSinglePage = async (guild: DiscordJS.Guild | undefined, data: any): Promise<any> => {
+    handleDataSinglePage = async (guild: DiscordJS.Guild | undefined, data: any, discord2AddressData: { [key: string]: string }): Promise<any> => {
         let balances: { [key: string]: number } = {};
         for (let balance of data.balances) {
             balances[balance.user_id] = balance.total;
@@ -84,7 +84,8 @@ export default class UnbelievaBoatAPIBot {
             return {
                 UserId: user.id,
                 Username: user.username,
-                Tag: user.discriminator
+                Tag: user.discriminator,
+                Address: discord2AddressData[user.id] ?? ''
             }
         })
         return {
@@ -93,7 +94,7 @@ export default class UnbelievaBoatAPIBot {
         }
     }
 
-    dumpAllBalancesInExcelFile = async (guild: DiscordJS.Guild | undefined): Promise<any> => {
+    dumpAllBalancesInExcelFile = async (guild: DiscordJS.Guild | undefined, discord2AddressData: { [key: string]: string }): Promise<any> => {
         console.log("start");
 
         let errorPages: number[] = [];
@@ -109,7 +110,7 @@ export default class UnbelievaBoatAPIBot {
             let currentUsersCount = users.length;
             let data = await this.getBalancesByPage(this.LeaderBoardUnbelievaBoatAPI, 25, currentPage + 1);
             if (data) {
-                const handledData = await this.handleDataSinglePage(guild, data);
+                const handledData = await this.handleDataSinglePage(guild, data, discord2AddressData);
                 let newUsers = handledData.newUsers;
                 let newBalances = handledData.balances;
 
@@ -123,7 +124,7 @@ export default class UnbelievaBoatAPIBot {
 
                 try {
                     if (currentPage === 1) this.dumpExcel(savepath, users);
-                    else this.appendExcel(savepath, newUsers, ["UserId", "Username", "Tag"], 0, currentUsersCount + 1);
+                    else this.appendExcel(savepath, newUsers, ["UserId", "Username", "Tag", "Address"], 0, currentUsersCount + 1);
                 } catch (err: any) {
                     console.error(`${err}`);
                     return '';
@@ -138,13 +139,13 @@ export default class UnbelievaBoatAPIBot {
             let page: any = errorPages.shift();
             let data = await this.getBalancesByPage(this.LeaderBoardUnbelievaBoatAPI, 25, page);
             if (data) {
-                const newData = await this.handleDataSinglePage(guild, data);
+                const newData = await this.handleDataSinglePage(guild, data, discord2AddressData);
                 users = users.concat(newData.newUsers);
                 balances = {
                     ...balances,
                     ...newData.balances
                 }
-                this.appendExcel(savepath, newData.newUsers, ["UserId", "Username", "Tag"], 0, users.length + 1);
+                this.appendExcel(savepath, newData.newUsers, ["UserId", "Username", "Tag", "Address"], 0, users.length + 1);
                 console.log(currentPage);
             } else {
                 errorPages.push(page);
