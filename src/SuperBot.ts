@@ -71,11 +71,11 @@ export default class SuperBot {
                 const result: any = await this.unbelievaBoatAPIBot.dumpAllBalancesInExcelFile(this.guild, discord2AddressData);
                 const errorPages: number[] = result.errorPages;
                 const currentUsersCount: number = result.currentUsersCount;
-                console.log(`There are some error pages when getting data including: ${errorPages.join(",")}`);
+                if (errorPages.length > 0) console.log(`There are some error pages when getting data including: ${errorPages.join(",")}`);
                 message.reply({
-                    content: `We have completed the excel file you need with ${currentUsersCount}. Contact the bot owner to get the file.`
+                    content: `We have completed the excel file you need with ${currentUsersCount} users. Contact the bot owner to get the file.`
                 })
-            } else if (message.content === 'test') {
+            } else if (message.content === '!merge') {
                 // message.channel.send({
                 //     files: [
                 //         'excels/test.xlsx'

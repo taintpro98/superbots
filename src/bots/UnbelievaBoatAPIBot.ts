@@ -3,6 +3,9 @@ import axios from 'axios';
 import XLSX from 'xlsx';
 import DiscordJS from 'discord.js';
 
+import { handleNekoCSV, handleUBBotDataExcel } from '../utils';
+import { UBBOTdataExcel } from '../types';
+
 export default class UnbelievaBoatAPIBot {
     private LeaderBoardUnbelievaBoatAPI: string = '';
     private OUTPUT_DIR: string = path.resolve(__dirname, '../../excels');
@@ -96,7 +99,7 @@ export default class UnbelievaBoatAPIBot {
 
     dumpAllBalancesInExcelFile = async (guild: DiscordJS.Guild | undefined, discord2AddressData: { [key: string]: string }): Promise<any> => {
         console.log("start");
-        
+
         let errorPages: number[] = [];
         let balances: { [key: string]: number } = {};
         let users: any[] = [];
@@ -106,7 +109,7 @@ export default class UnbelievaBoatAPIBot {
         const filename = Date.now() + '-' + Math.round(Math.random() * 1E9) + '.xlsx';
         const savepath = path.resolve(this.OUTPUT_DIR, filename);
 
-        while (currentPage !== totalPages && currentPage < 3) {
+        while (currentPage !== totalPages) {
             let currentUsersCount = users.length;
             let data = await this.getBalancesByPage(this.LeaderBoardUnbelievaBoatAPI, 25, currentPage + 1);
             if (data) {
@@ -129,7 +132,7 @@ export default class UnbelievaBoatAPIBot {
                     console.error(`${err}`);
                     return '';
                 }
-                console.log(currentPage);
+                console.log(`${currentPage}/${totalPages}`);
             } else {
                 errorPages.push(currentPage);
                 console.log(`Page ${currentPage} has errors when getting data`);
@@ -146,7 +149,7 @@ export default class UnbelievaBoatAPIBot {
                     ...newData.balances
                 }
                 this.appendExcel(savepath, newData.newUsers, ["UserId", "Username", "Tag", "Address"], 0, users.length + 1);
-                console.log(currentPage);
+                console.log(`${currentPage}/${totalPages}`);
             } else {
                 errorPages.push(page);
                 console.log(`Page ${page} has errors when getting data`);
@@ -166,5 +169,18 @@ export default class UnbelievaBoatAPIBot {
             errorPages: errorPages,
             currentUsersCount: users.length
         };
+    }
+
+    mergeDataAddress = (UBBotPath: string, addressPath: string) => {
+        let addressData: { [key: string]: string } = handleNekoCSV(addressPath);
+        let UBBotData: UBBOTdataExcel[] = handleUBBotDataExcel(UBBotPath);
+        UBBotData = UBBotData.map((data: any) => {
+            return {
+                ...data,
+                Address: addressData[data.UserId]
+            }
+        })
+        const filepath = path.resolve(this.OUTPUT_DIR, 'final.xlsx');
+        this.dumpExcel(filepath, UBBotData);
     }
 }
