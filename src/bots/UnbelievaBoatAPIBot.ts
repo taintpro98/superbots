@@ -79,7 +79,7 @@ export default class UnbelievaBoatAPIBot {
         const filtered_members = data.users.filter((user: any, idx: number) => {
             return results[idx]
         });
-
+        // console.log("discord2AddressData", discord2AddressData);
         let newUsers: any[] = filtered_members.map((user: any) => {
             return {
                 UserId: user.id,
@@ -96,7 +96,7 @@ export default class UnbelievaBoatAPIBot {
 
     dumpAllBalancesInExcelFile = async (guild: DiscordJS.Guild | undefined, discord2AddressData: { [key: string]: string }): Promise<any> => {
         console.log("start");
-
+        
         let errorPages: number[] = [];
         let balances: { [key: string]: number } = {};
         let users: any[] = [];
@@ -106,7 +106,7 @@ export default class UnbelievaBoatAPIBot {
         const filename = Date.now() + '-' + Math.round(Math.random() * 1E9) + '.xlsx';
         const savepath = path.resolve(this.OUTPUT_DIR, filename);
 
-        while (currentPage !== totalPages) {
+        while (currentPage !== totalPages && currentPage < 3) {
             let currentUsersCount = users.length;
             let data = await this.getBalancesByPage(this.LeaderBoardUnbelievaBoatAPI, 25, currentPage + 1);
             if (data) {
@@ -158,7 +158,7 @@ export default class UnbelievaBoatAPIBot {
                 Balance: balances[user.UserId]
             }
         })
-        this.appendExcel(savepath, users, ["Balance"], 3, 1);
+        this.appendExcel(savepath, users, ["Balance"], 4, 1);
 
         console.log("done");
         return {

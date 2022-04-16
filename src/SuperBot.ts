@@ -43,37 +43,38 @@ export default class SuperBot {
                     content: 'Our Superbot is processing your requirement. Please wait a litle longer. About 8-10 hours for filtering users by their roles'
                 })
 
+                this.guildId = message.guild?.id ?? '';
+                this.unbelievaBoatAPIBot.setLeaderBoardUnbelievaBoatAPI(`https://unbelievaboat.com/api/v1/guilds/${this.guildId}/leaderboard`);
+                this.guild = this.client.guilds.cache.get(this.guildId);
+
+                let filename: string;
+                let filepath: string;
+
                 if (message.attachments.size) {
                     const attach = Array.from(message.attachments.values())[0];
                     const csvUrl = attach.url;
                     if (attach.name?.split(".").pop() !== "csv") {
                         message.channel.send({
-                            content: "Your attached file doesn't include any csv files"
+                            content: "Your attached file doesn't include any csv files. We will use our default csv file"
                         })
+                        filepath = path.resolve(this.OUTPUT_DIR, "ICCO_Wallets.csv");
                     } else {
-                        const filename: string = attach.name ?? "data.csv";
-                        const filepath: string = path.resolve(this.OUTPUT_DIR, filename);
+                        filename = attach.name ?? "data.csv";
+                        filepath = path.resolve(this.OUTPUT_DIR, filename);
                         await saveFileFromURL(csvUrl, filepath);
-
-                        this.guildId = message.guild?.id ?? '';
-                        this.unbelievaBoatAPIBot.setLeaderBoardUnbelievaBoatAPI(`https://unbelievaboat.com/api/v1/guilds/${this.guildId}/leaderboard`);
-                        this.guild = this.client.guilds.cache.get(this.guildId);
-
-                        const discord2AddressFilePath: string = filepath;
-                        const discord2AddressData: { [key: string]: string } = handleNekoCSV(discord2AddressFilePath);
-                        const result: any = await this.unbelievaBoatAPIBot.dumpAllBalancesInExcelFile(this.guild, discord2AddressData);
-                        const errorPages: number[] = result.errorPages;
-                        const currentUsersCount: number = result.currentUsersCount;
-                        console.log(`There are some error pages when getting data including: ${errorPages.join(",")}`);
-                        message.reply({
-                            content: `We have completed the excel file you need with ${currentUsersCount}. Contact the bot owner to get the file.`
-                        })
                     }
                 } else {
-                    message.channel.send({
-                        content: "You should give us a csv file"
-                    })
+                    filepath = path.resolve(this.OUTPUT_DIR, "ICCO_Wallets.csv");
                 }
+
+                const discord2AddressData: { [key: string]: string } = handleNekoCSV(filepath);
+                const result: any = await this.unbelievaBoatAPIBot.dumpAllBalancesInExcelFile(this.guild, discord2AddressData);
+                const errorPages: number[] = result.errorPages;
+                const currentUsersCount: number = result.currentUsersCount;
+                console.log(`There are some error pages when getting data including: ${errorPages.join(",")}`);
+                message.reply({
+                    content: `We have completed the excel file you need with ${currentUsersCount}. Contact the bot owner to get the file.`
+                })
             } else if (message.content === 'test') {
                 // message.channel.send({
                 //     files: [

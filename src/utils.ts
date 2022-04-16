@@ -10,11 +10,12 @@ export const ref2range = (ref: string): number => {
 export const handleNekoCSV = (filepath: string): { [key: string]: string } => {
     let result: { [key: string]: string } = {};
     let workbook = XLSX.readFile(filepath);
-    let worksheet = workbook.Sheets['Sheet1'];
-    let json_sheet = XLSX.utils.sheet_to_json(worksheet);
+    let worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    let json_sheet = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+
     json_sheet.forEach((row: any) => {
         const rowValues: any = Object.values(row);
-        result[rowValues[0].toString()] = rowValues[1].toString();
+        result[rowValues[1].toString().trim()] = rowValues[2].toString().trim();
     })
     return result;
 }
