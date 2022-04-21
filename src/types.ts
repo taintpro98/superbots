@@ -3,5 +3,6 @@ export type UBBOTdataExcel = {
     Username: string,
     Tag: string,
     Address: string,
-    Balance: string
+    // Balance: string,
+    ASG: string
 }

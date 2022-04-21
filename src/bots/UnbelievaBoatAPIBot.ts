@@ -180,7 +180,7 @@ export default class UnbelievaBoatAPIBot {
                 Address: addressData[data.UserId]
             }
         })
-        const filepath = path.resolve(this.OUTPUT_DIR, 'final.xlsx');
+        const filepath = path.resolve(this.OUTPUT_DIR, 'today.xlsx');
         this.dumpExcel(filepath, UBBotData);
     }
 }
