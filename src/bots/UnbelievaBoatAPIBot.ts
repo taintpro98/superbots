@@ -63,13 +63,13 @@ export default class UnbelievaBoatAPIBot {
     filterPromise = async (guild: DiscordJS.Guild | undefined, user: any): Promise<boolean | undefined> => {
         try {
             let member = await guild?.members.fetch(user.id);
-            return member?.roles.cache.has("929711349699838023") || member?.roles.cache.has("950067727157047377");
+            return member?.roles.cache.has("970038247218643015") || member?.roles.cache.has("970037755998523402");
         } catch (err: any) {
             console.error(`${err}`);
         }
     }
 
-    handleDataSinglePage = async (guild: DiscordJS.Guild | undefined, data: any, discord2AddressData: { [key: string]: string }): Promise<any> => {
+    handleDataSinglePage = async (guild: DiscordJS.Guild | undefined, data: any, discord2AddressData?: { [key: string]: string }): Promise<any> => {
         let balances: { [key: string]: number } = {};
         for (let balance of data.balances) {
             balances[balance.user_id] = balance.total;
@@ -82,13 +82,12 @@ export default class UnbelievaBoatAPIBot {
         const filtered_members = data.users.filter((user: any, idx: number) => {
             return results[idx]
         });
-        // console.log("discord2AddressData", discord2AddressData);
         let newUsers: any[] = filtered_members.map((user: any) => {
             return {
                 UserId: user.id,
                 Username: user.username,
                 Tag: user.discriminator,
-                Address: discord2AddressData[user.id] ?? ''
+                Address: discord2AddressData?.[user.id] ?? ''
             }
         })
         return {
@@ -97,7 +96,7 @@ export default class UnbelievaBoatAPIBot {
         }
     }
 
-    dumpAllBalancesInExcelFile = async (guild: DiscordJS.Guild | undefined, discord2AddressData: { [key: string]: string }): Promise<any> => {
+    dumpAllBalancesInExcelFile = async (guild: DiscordJS.Guild | undefined, fields: string[], discord2AddressData?: { [key: string]: string }): Promise<any> => {
         console.log("start");
 
         let errorPages: number[] = [];
@@ -127,7 +126,7 @@ export default class UnbelievaBoatAPIBot {
 
                 try {
                     if (currentPage === 1) this.dumpExcel(savepath, users);
-                    else this.appendExcel(savepath, newUsers, ["UserId", "Username", "Tag", "Address"], 0, currentUsersCount + 1);
+                    else this.appendExcel(savepath, newUsers, fields, 0, currentUsersCount + 1);
                 } catch (err: any) {
                     console.error(`${err}`);
                     return '';

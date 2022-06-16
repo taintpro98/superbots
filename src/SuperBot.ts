@@ -49,6 +49,7 @@ export default class SuperBot {
 
                 let filename: string;
                 let filepath: string;
+                let result: any;
 
                 if (message.attachments.size) {
                     const attach = Array.from(message.attachments.values())[0];
@@ -63,12 +64,13 @@ export default class SuperBot {
                         filepath = path.resolve(this.OUTPUT_DIR, filename);
                         await saveFileFromURL(csvUrl, filepath);
                     }
+                    const discord2AddressData: { [key: string]: string } = handleNekoCSV(filepath);
+                    result = await this.unbelievaBoatAPIBot.dumpAllBalancesInExcelFile(this.guild, ["UserId", "Username", "Tag", "Address"], discord2AddressData);
                 } else {
-                    filepath = path.resolve(this.OUTPUT_DIR, "ICCO_Wallets.csv");
+                    // filepath = path.resolve(this.OUTPUT_DIR, "ICCO_Wallets.csv");
+                    result = await this.unbelievaBoatAPIBot.dumpAllBalancesInExcelFile(this.guild, ["UserId", "Username", "Tag"]);
                 }
 
-                const discord2AddressData: { [key: string]: string } = handleNekoCSV(filepath);
-                const result: any = await this.unbelievaBoatAPIBot.dumpAllBalancesInExcelFile(this.guild, discord2AddressData);
                 const errorPages: number[] = result.errorPages;
                 const currentUsersCount: number = result.currentUsersCount;
                 if (errorPages.length > 0) console.log(`There are some error pages when getting data including: ${errorPages.join(",")}`);

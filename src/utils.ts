@@ -19,7 +19,7 @@ export const handleNekoCSV = (filepath: string): { [key: string]: string } => {
 
     json_sheet.forEach((row: any) => {
         const rowValues: any = Object.values(row);
-        result[rowValues[1].toString().trim()] = rowValues[3].toString().trim();
+        result[rowValues[0].toString().trim()] = rowValues[1].toString().trim();
     })
     return result;
 }
@@ -32,15 +32,15 @@ export const handleUBBotDataExcel = (filepath: string): UBBOTdataExcel[] => {
 
     json_sheet.forEach((row: any) => {
         const rowValues: any = Object.values(row);
-        // console.log(rowValues)
-        result.push({
-            UserId: rowValues[0].toString().trim(),
-            Username: rowValues[1].toString().trim(),
-            Tag: rowValues[2].toString().trim(),
-            Address: '',
-            ASG: rowValues[3].toString().trim()
-            // Balance: rowValues[4].toString().trim()
-        })
+        if (rowValues.length > 3)
+            result.push({
+                UserId: rowValues[0].toString().trim(),
+                Username: rowValues[1].toString().trim(),
+                Tag: rowValues[2].toString().trim(),
+                Address: '',
+                // ASG: rowValues[3].toString().trim()
+                Balance: rowValues[rowValues.length - 1].toString().trim()
+            })
     })
     return result;
 }
@@ -57,8 +57,8 @@ export const saveFileFromURL = async (url: string, output_path: string) => {
 (async () => {
     const UBBot = new UnbelievaBoatAPIBot();
     const OUTPUT_DIR: string = path.resolve(__dirname, '../excels');
-    const UBBotPath: string = path.resolve(OUTPUT_DIR, 'Chua_co_vi_sau_lan_2.xlsx');
-    const addressPath: string = path.resolve(OUTPUT_DIR, 'ICCO_Wallets_lan_3.csv');
+    const UBBotPath: string = path.resolve(OUTPUT_DIR, '1655265668143-925308948.xlsx');
+    const addressPath: string = path.resolve(OUTPUT_DIR, 'ICCO_Phase_II_Wallets_Lan_1.csv');
 
     UBBot.mergeDataAddress(UBBotPath, addressPath);
 })()
